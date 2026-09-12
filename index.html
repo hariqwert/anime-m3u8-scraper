@@ -88,7 +88,7 @@
           <div class="flex items-center justify-between">
             <h2 id="currentAnimeTitle" class="font-bold text-white text-base truncate flex items-center gap-2">
               <span>ONE PIECE</span>
-              <span id="currentEpisodeBadge" class="text-xs px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-semibold">Ep 1000</span>
+              <span id="currentEpisodeBadge" class="text-xs px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-semibold">Ep 1</span>
             </h2>
             <div class="flex items-center gap-2">
               <!-- Audio Mode (SUB / DUB) -->
@@ -242,7 +242,7 @@ Select an anime and episode to inspect live API responses...
     // State
     let currentAnilistId = 21; // One Piece default
     let currentMalId = 21;
-    let currentEpisode = 1000;
+    let currentEpisode = 1;
     let currentAudio = 'sub';
     let currentServer = 'yuki';
     let currentChunk = 0;
@@ -482,10 +482,11 @@ Select an anime and episode to inspect live API responses...
     async function loadEpisodeStreams(anilistId, ep, audio) {
       videoLoader.classList.remove('hidden');
       dismissedSkipIntervals.clear();
+      const currentTitle = document.getElementById('currentAnimeTitle')?.firstElementChild?.innerText || '';
 
       try {
         const [streamRes, skipRes] = await Promise.all([
-          fetch(`/api/anime/${anilistId}/${ep}/streams?type=${audio}&idMal=${currentMalId || ''}`),
+          fetch(`/api/anime/${anilistId}/${ep}/streams?type=${audio}&idMal=${currentMalId || ''}&title=${encodeURIComponent(currentTitle)}`),
           currentMalId ? fetch(`/api/anime/skip/${currentMalId}/${ep}`).then(r => r.json()).catch(() => null) : Promise.resolve(null)
         ]);
 
@@ -497,10 +498,10 @@ Select an anime and episode to inspect live API responses...
         updateInspectorView();
 
         if (streamData.sources && streamData.sources.length) {
-          const target = streamData.sources.find(s => s.server === currentServer) || streamData.sources[0];
+          const target = streamData.sources.find(s => s.server.toLowerCase() === currentServer.toLowerCase()) || streamData.sources[0];
           playStream(target);
         } else {
-          alert('No streams returned across any of the 5 anime servers.');
+          console.warn('No streams returned for episode ' + ep);
         }
 
       } catch (e) {
@@ -513,11 +514,17 @@ Select an anime and episode to inspect live API responses...
     // 6. Server Buttons
     function renderServerButtons(sources) {
       const container = document.getElementById('serverList');
-      const allServers = ['beep', 'yuki', 'neko', 'zuna', 'loli'];
+      const baseServers = ['beep', 'yuki', 'neko', 'zuna', 'loli'];
+      
+      // Include any extra servers returned (e.g. AnimeSalt, Mikazuki)
+      const extraServers = (sources || [])
+        .map(s => s.server)
+        .filter(s => s && !baseServers.includes(s.toLowerCase()));
+      const allServers = [...baseServers, ...new Set(extraServers)];
 
       container.innerHTML = allServers.map(srvName => {
-        const found = sources.find(s => s.server.toLowerCase() === srvName);
-        const isActive = found && found.server === currentServer;
+        const found = sources.find(s => s.server.toLowerCase() === srvName.toLowerCase());
+        const isActive = found && found.server.toLowerCase() === currentServer.toLowerCase();
 
         if (found) {
           return `
@@ -528,7 +535,7 @@ Select an anime and episode to inspect live API responses...
                         ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-md font-bold' 
                         : 'bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-700'
                     }">
-              <span class="text-xs uppercase">${srvName}</span>
+              <span class="text-xs uppercase">${found.server}</span>
               <span class="text-[9px] text-emerald-400 flex items-center gap-1 mt-0.5">● Ready</span>
             </button>
           `;

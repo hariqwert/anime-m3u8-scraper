@@ -273,11 +273,34 @@ async function getAnimeStreams({ anilistId, episode = 1, type = 'sub', title = '
     console.warn(`[AnimeScraper] Ryuu fetch failed:`, e.message);
   }
 
-  // Fallback: AnimeSalt if Ryuu had no sources
-  if (!streams.length && title) {
+  // If primary Ryuu type returned 0 streams, try alternate type (dub/sub)
+  if (!streams.length) {
+    const altType = type === 'sub' ? 'dub' : 'sub';
     try {
-      console.log(`[AnimeScraper] Ryuu returned 0 streams, attempting AnimeSalt for "${title}"...`);
-      const saltUrl = `${RYUU_API}/animesalt/streams?title=${encodeURIComponent(title)}&ep=${episode}&season=1`;
+      const altUrl = `${RYUU_API}/ryuu/streams?anilistId=${anilistId}&ep=${episode}&type=${altType}`;
+      const altRes = await doRequest(altUrl, {
+        headers: { 'x-api-key': token },
+        timeout: 10000
+      });
+      if (altRes.status === 200 && Array.isArray(altRes.data?.streams) && altRes.data.streams.length > 0) {
+        streams = altRes.data.streams;
+      }
+    } catch (e) {}
+  }
+
+  // Fallback: AnimeSalt if Ryuu had no sources
+  let searchTitle = title;
+  if (!streams.length && !searchTitle) {
+    try {
+      const info = await getAnimeDetails(anilistId);
+      searchTitle = info.title || info.romajiTitle || '';
+    } catch (e) {}
+  }
+
+  if (!streams.length && searchTitle) {
+    try {
+      console.log(`[AnimeScraper] Ryuu returned 0 streams, attempting AnimeSalt for "${searchTitle}"...`);
+      const saltUrl = `${RYUU_API}/animesalt/streams?title=${encodeURIComponent(searchTitle)}&ep=${episode}&season=1`;
       const saltRes = await doRequest(saltUrl, {
         headers: { 'x-api-key': token },
         timeout: 18000
