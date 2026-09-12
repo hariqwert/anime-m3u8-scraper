@@ -46,8 +46,10 @@ const server = http.createServer(async (req, res) => {
 
   try {
     // 1. Serve Interactive Test Bench UI
-    if (pathname === '/test' || pathname === '/ui' || pathname === '/demo' || (pathname === '/' && (req.headers['accept'] || '').includes('text/html'))) {
-      const htmlPath = path.join(__dirname, 'test_anime.html');
+    if (pathname === '/' || pathname === '/test' || pathname === '/ui' || pathname === '/demo' || pathname === '/index.html' || (req.headers['accept'] || '').includes('text/html')) {
+      const htmlPath = fs.existsSync(path.join(__dirname, 'index.html')) 
+        ? path.join(__dirname, 'index.html') 
+        : path.join(__dirname, 'test_anime.html');
       if (fs.existsSync(htmlPath)) {
         res.writeHead(200, {
           'Content-Type': 'text/html; charset=utf-8',
@@ -154,7 +156,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`🚀 Anime M3U8 Stream Scraper Microservice running on http://localhost:${PORT}`);
-  console.log(`📺 Web Player & API Test Bench: http://localhost:${PORT}/test`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Anime M3U8 Stream Scraper Microservice running on port ${PORT}`);
+  console.log(`📺 Web Player & API Test Bench: /test`);
 });

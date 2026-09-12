@@ -12,11 +12,11 @@
     body { background-color: #0c0f14; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif; }
     .glass-card { background: rgba(18, 24, 38, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
     .glow-cyan { box-shadow: 0 0 20px rgba(6, 182, 212, 0.15); }
-    /* Custom scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    ::cue { background: rgba(0, 0, 0, 0.75); color: #fff; font-size: 1.1em; text-shadow: 0 1px 2px #000; border-radius: 4px; padding: 2px 6px; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-black">
@@ -31,16 +31,16 @@
         <div>
           <h1 class="text-lg font-bold text-white flex items-center gap-2">
             Bingr Anime API Test Bench
-            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">v2.0</span>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">v2.1</span>
           </h1>
-          <p class="text-xs text-slate-400">Testing [beep, yuki, neko, zuna, loli] Clusters + AniSkip OP/ED Skipping</p>
+          <p class="text-xs text-slate-400">5 Server Clusters [beep, yuki, neko, zuna, loli] + AniSkip + Audio & Subtitle Switcher</p>
         </div>
       </div>
       
       <div class="flex items-center gap-2 text-xs">
         <div id="apiStatus" class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          API Connected (:5000)
+          API Connected
         </div>
       </div>
     </div>
@@ -49,7 +49,7 @@
   <!-- Main Container -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-6">
 
-    <!-- Search & Quick Presets -->
+    <!-- Search & Presets -->
     <section class="glass-card rounded-2xl p-4 sm:p-6 shadow-xl glow-cyan space-y-4">
       <div class="flex flex-col sm:flex-row gap-3">
         <div class="relative flex-1">
@@ -73,7 +73,7 @@
         </div>
       </div>
 
-      <!-- Search Results Tray -->
+      <!-- Search Results Grid -->
       <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3 max-h-72 overflow-y-auto pr-1">
         <!-- Injected via JS -->
       </div>
@@ -91,7 +91,7 @@
               <span id="currentEpisodeBadge" class="text-xs px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-semibold">Ep 1000</span>
             </h2>
             <div class="flex items-center gap-2">
-              <!-- Audio Type (Sub/Dub) -->
+              <!-- Audio Mode (SUB / DUB) -->
               <div class="inline-flex rounded-lg bg-slate-900 border border-slate-700/80 p-0.5 text-xs">
                 <button id="btnSub" onclick="setAudioType('sub')" class="px-2.5 py-1 rounded-md font-semibold bg-cyan-500 text-black transition-all">SUB</button>
                 <button id="btnDub" onclick="setAudioType('dub')" class="px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white transition-all">DUB</button>
@@ -122,6 +122,31 @@
             </div>
           </div>
 
+          <!-- Audio Track & Subtitle Track Selectors Toolbar -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <!-- Audio Track Selector -->
+            <div class="space-y-1">
+              <label class="text-[11px] font-semibold text-slate-400 flex items-center gap-1.5">
+                <span>🔊 Audio Track:</span>
+                <span id="audioTrackBadge" class="text-[10px] text-cyan-400">Default</span>
+              </label>
+              <select id="audioSelect" onchange="switchAudioTrack(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                <option value="default">Default Track</option>
+              </select>
+            </div>
+
+            <!-- Subtitle Selector -->
+            <div class="space-y-1">
+              <label class="text-[11px] font-semibold text-slate-400 flex items-center gap-1.5">
+                <span>💬 Subtitles:</span>
+                <span id="subTrackBadge" class="text-[10px] text-cyan-400">Off</span>
+              </label>
+              <select id="subtitleSelect" onchange="switchSubtitle(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                <option value="off">Off (No Subtitles)</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Server Clusters (beep, yuki, neko, zuna, loli) -->
           <div class="space-y-2 pt-2 border-t border-slate-800/80">
             <div class="flex items-center justify-between text-xs">
@@ -136,14 +161,38 @@
           </div>
         </div>
 
-        <!-- Episodes Selector Grid -->
-        <div class="glass-card rounded-2xl p-4 space-y-2">
-          <div class="flex items-center justify-between text-xs">
-            <h3 class="font-bold text-slate-300">Episodes Navigator</h3>
-            <span id="episodesCountText" class="text-slate-400">Loading...</span>
+        <!-- Episodes Selector Area with Chunking & Thumbnails -->
+        <div class="glass-card rounded-2xl p-4 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+            <div>
+              <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                <span>Episodes Navigator</span>
+                <span id="episodesCountText" class="text-xs font-normal text-slate-400">Loading...</span>
+              </h3>
+            </div>
+            <!-- Quick Jump Input -->
+            <div class="flex items-center gap-2">
+              <input 
+                type="number" 
+                id="jumpEpisodeInput" 
+                placeholder="Ep #" 
+                min="1" 
+                class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+              />
+              <button onclick="jumpToEpisode()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs rounded-lg border border-slate-700 transition-colors">
+                Go
+              </button>
+            </div>
           </div>
-          <div id="episodesGrid" class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1 text-xs">
-            <!-- Buttons injected via JS -->
+
+          <!-- Chunk/Season Selector Tabs -->
+          <div id="episodeChunksBar" class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <!-- Chunk tabs (e.g. 1-100, 101-200) injected via JS -->
+          </div>
+
+          <!-- Rich Episodes Grid -->
+          <div id="episodesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-64 overflow-y-auto p-1 text-xs">
+            <!-- Episode Cards injected via JS -->
           </div>
         </div>
       </div>
@@ -179,6 +228,7 @@ Select an anime and episode to inspect live API responses...
           <div class="font-mono text-[11px] space-y-1 bg-slate-900/80 p-2 rounded-lg border border-slate-800 text-slate-300">
             <div><span class="text-emerald-400">GET</span> /api/anime/search?q={query}</div>
             <div><span class="text-emerald-400">GET</span> /api/anime/:id</div>
+            <div><span class="text-emerald-400">GET</span> /api/anime/:id/episodes?chunk={chunk}</div>
             <div><span class="text-emerald-400">GET</span> /api/anime/:id/:ep/streams?type=sub|dub</div>
             <div><span class="text-emerald-400">GET</span> /api/anime/skip/:idMal/:ep</div>
           </div>
@@ -195,6 +245,10 @@ Select an anime and episode to inspect live API responses...
     let currentEpisode = 1000;
     let currentAudio = 'sub';
     let currentServer = 'yuki';
+    let currentChunk = 0;
+    let totalEpisodesCount = 1174;
+    let cachedEpisodeList = [];
+
     let activeStreamData = null;
     let activeSkipData = null;
     let activeAnimeDetails = null;
@@ -273,55 +327,148 @@ Select an anime and episode to inspect live API responses...
     async function selectAnime(anilistId, idMal, encodedTitle, totalEps) {
       currentAnilistId = anilistId;
       currentMalId = idMal;
+      totalEpisodesCount = totalEps || 24;
       const title = decodeURIComponent(encodedTitle);
       document.getElementById('currentAnimeTitle').firstElementChild.innerText = title;
 
-      // Populate Episodes Grid
-      renderEpisodesGrid(totalEps || 24);
+      // Reset episode and chunk
+      currentEpisode = 1;
+      currentChunk = 0;
+      document.getElementById('currentEpisodeBadge').innerText = `Ep ${currentEpisode}`;
+
+      // Build chunk tabs & fetch episodes
+      buildEpisodeChunkTabs(totalEpisodesCount);
+      loadEpisodeChunk(currentAnilistId, 0);
 
       // Load details and streams
       fetchAnimeDetails(anilistId);
       loadEpisodeStreams(anilistId, currentEpisode, currentAudio);
     }
 
-    // 4. Render Episodes Grid
-    function renderEpisodesGrid(count) {
-      const grid = document.getElementById('episodesGrid');
-      const targetCount = Math.min(count || 24, 250); // limit button explosion
-      document.getElementById('episodesCountText').innerText = `${targetCount} episodes available`;
+    // 4. Episode Chunk Tabs & Navigator
+    function buildEpisodeChunkTabs(total) {
+      const bar = document.getElementById('episodeChunksBar');
+      const chunkSize = 100;
+      const numChunks = Math.max(1, Math.ceil(total / chunkSize));
 
       let html = '';
-      for (let i = 1; i <= targetCount; i++) {
-        const isCurrent = i === currentEpisode;
+      for (let c = 0; c < numChunks; c++) {
+        const start = (c * chunkSize) + 1;
+        const end = Math.min((c + 1) * chunkSize, total);
+        const isActive = c === currentChunk;
         html += `
-          <button onclick="selectEpisode(${i})" 
-                  id="epBtn_${i}"
-                  class="px-2.5 py-1 rounded-lg border font-mono text-[11px] transition-all ${
-                    isCurrent 
-                      ? 'bg-cyan-500 text-black font-bold border-cyan-400 shadow-md' 
-                      : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:border-slate-600 hover:text-white'
+          <button onclick="switchEpisodeChunk(${c})" 
+                  id="chunkTab_${c}"
+                  class="px-2.5 py-1 rounded-lg border font-semibold text-[11px] whitespace-nowrap transition-all ${
+                    isActive 
+                      ? 'bg-cyan-500 text-black border-cyan-400' 
+                      : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white'
                   }">
-            ${i}
+            ${start} - ${end}
           </button>
         `;
       }
-      grid.innerHTML = html;
+      bar.innerHTML = html;
+    }
+
+    async function switchEpisodeChunk(chunkIdx) {
+      currentChunk = chunkIdx;
+      document.querySelectorAll('#episodeChunksBar button').forEach(b => {
+        b.className = 'px-2.5 py-1 rounded-lg border font-semibold text-[11px] whitespace-nowrap bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white transition-all';
+      });
+      const activeTab = document.getElementById(`chunkTab_${chunkIdx}`);
+      if (activeTab) activeTab.className = 'px-2.5 py-1 rounded-lg border font-semibold text-[11px] whitespace-nowrap bg-cyan-500 text-black border-cyan-400 transition-all';
+
+      loadEpisodeChunk(currentAnilistId, chunkIdx);
+    }
+
+    async function loadEpisodeChunk(anilistId, chunkIdx) {
+      const grid = document.getElementById('episodesGrid');
+      grid.innerHTML = '<div class="col-span-full py-6 text-center text-xs text-slate-400 animate-pulse">Loading episodes...</div>';
+
+      try {
+        const res = await fetch(`/api/anime/${anilistId}/episodes?chunk=${chunkIdx}`);
+        const data = await res.json();
+        const eps = data.episodes || [];
+        cachedEpisodeList = eps;
+
+        document.getElementById('episodesCountText').innerText = `${data.total || totalEpisodesCount} Total Episodes`;
+
+        if (!eps.length) {
+          // Fallback: generate number buttons if Bingr has no chunk
+          const start = (chunkIdx * 100) + 1;
+          const end = Math.min((chunkIdx + 1) * 100, totalEpisodesCount);
+          let fallbackHtml = '';
+          for (let i = start; i <= end; i++) {
+            const isCur = i === currentEpisode;
+            fallbackHtml += `
+              <div onclick="selectEpisode(${i})" class="cursor-pointer p-2 rounded-lg border transition-all ${
+                isCur ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300' : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+              }">
+                <div class="font-bold">Episode ${i}</div>
+              </div>
+            `;
+          }
+          grid.innerHTML = fallbackHtml;
+          return;
+        }
+
+        grid.innerHTML = eps.map(e => {
+          const isCur = e.episode === currentEpisode;
+          return `
+            <div onclick="selectEpisode(${e.episode})" 
+                 id="epCard_${e.episode}"
+                 class="cursor-pointer group flex flex-col rounded-xl overflow-hidden border p-1.5 transition-all ${
+                   isCur 
+                     ? 'bg-cyan-500/15 border-cyan-400 shadow-md shadow-cyan-500/10' 
+                     : 'bg-slate-900/90 border-slate-800/80 hover:border-slate-700 hover:bg-slate-850'
+                 }">
+              <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-slate-800">
+                ${e.still ? `<img src="${e.still}" alt="Ep ${e.episode}" class="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />` : '<div class="w-full h-full flex items-center justify-center text-slate-600 font-bold">EP</div>'}
+                <span class="absolute bottom-1 left-1 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                  Ep ${e.episode}
+                </span>
+              </div>
+              <div class="mt-1 px-0.5">
+                <div class="text-[11px] font-bold text-white truncate ${isCur ? 'text-cyan-300' : 'group-hover:text-cyan-400'}">
+                  ${e.title || `Episode ${e.episode}`}
+                </div>
+                ${e.air_date ? `<div class="text-[9px] text-slate-500">${e.air_date}</div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (e) {
+        grid.innerHTML = `<div class="col-span-full py-4 text-center text-xs text-red-400">Failed to load episodes: ${e.message}</div>`;
+      }
     }
 
     function selectEpisode(ep) {
       currentEpisode = ep;
       document.getElementById('currentEpisodeBadge').innerText = `Ep ${ep}`;
 
-      // Update button styles
-      document.querySelectorAll('#episodesGrid button').forEach(b => {
-        b.className = 'px-2.5 py-1 rounded-lg border font-mono text-[11px] bg-slate-900/90 text-slate-300 border-slate-800 hover:border-slate-600 hover:text-white transition-all';
+      // Refresh card active styles
+      document.querySelectorAll('#episodesGrid [id^="epCard_"]').forEach(el => {
+        el.className = 'cursor-pointer group flex flex-col rounded-xl overflow-hidden border p-1.5 transition-all bg-slate-900/90 border-slate-800/80 hover:border-slate-700';
       });
-      const activeBtn = document.getElementById(`epBtn_${ep}`);
-      if (activeBtn) {
-        activeBtn.className = 'px-2.5 py-1 rounded-lg border font-mono text-[11px] bg-cyan-500 text-black font-bold border-cyan-400 shadow-md transition-all';
+      const activeCard = document.getElementById(`epCard_${ep}`);
+      if (activeCard) {
+        activeCard.className = 'cursor-pointer group flex flex-col rounded-xl overflow-hidden border p-1.5 transition-all bg-cyan-500/15 border-cyan-400 shadow-md shadow-cyan-500/10';
       }
 
       loadEpisodeStreams(currentAnilistId, currentEpisode, currentAudio);
+    }
+
+    function jumpToEpisode() {
+      const val = parseInt(document.getElementById('jumpEpisodeInput').value, 10);
+      if (val && val > 0) {
+        const chunk = Math.floor((val - 1) / 100);
+        if (chunk !== currentChunk) {
+          switchEpisodeChunk(chunk);
+        }
+        selectEpisode(val);
+      }
     }
 
     function setAudioType(mode) {
@@ -337,7 +484,6 @@ Select an anime and episode to inspect live API responses...
       dismissedSkipIntervals.clear();
 
       try {
-        // Run streams and skip queries in parallel
         const [streamRes, skipRes] = await Promise.all([
           fetch(`/api/anime/${anilistId}/${ep}/streams?type=${audio}&idMal=${currentMalId || ''}`),
           currentMalId ? fetch(`/api/anime/skip/${currentMalId}/${ep}`).then(r => r.json()).catch(() => null) : Promise.resolve(null)
@@ -350,7 +496,6 @@ Select an anime and episode to inspect live API responses...
         renderServerButtons(streamData.sources || []);
         updateInspectorView();
 
-        // Select first server or currentServer
         if (streamData.sources && streamData.sources.length) {
           const target = streamData.sources.find(s => s.server === currentServer) || streamData.sources[0];
           playStream(target);
@@ -409,10 +554,13 @@ Select an anime and episode to inspect live API responses...
       }
     }
 
-    // 7. Video Playback with HLS.js
+    // 7. Video Playback & Subtitle/Audio Track Injections
     function playStream(srcObj) {
       currentServer = srcObj.server;
       const streamUrl = srcObj.url || srcObj.proxyUrl;
+
+      // Reset subtitles & audio selectors
+      populateSubtitleTracks(srcObj.subtitles || []);
 
       if (hlsInstance) {
         hlsInstance.destroy();
@@ -432,9 +580,21 @@ Select an anime and episode to inspect live API responses...
           video.play().catch(() => {});
         });
 
+        // Populate in-manifest Audio Tracks
+        hlsInstance.on(Hls.Events.AUDIO_TRACKS_UPDATED, (e, data) => {
+          populateHlsAudioTracks(data.audioTracks || []);
+        });
+
+        // Populate in-manifest Subtitle Tracks
+        hlsInstance.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, (e, data) => {
+          if (data.subtitleTracks && data.subtitleTracks.length > 0) {
+            mergeHlsSubtitleTracks(data.subtitleTracks);
+          }
+        });
+
         hlsInstance.on(Hls.Events.ERROR, (event, data) => {
           if (data.fatal) {
-            console.warn(`HLS error on server ${srcObj.server}:`, data.details);
+            console.warn(`HLS fatal error on server ${srcObj.server}:`, data.details);
             if (srcObj.proxyUrl && srcObj.url !== srcObj.proxyUrl) {
               console.log('Attempting proxy fallback...');
               hlsInstance.loadSource(srcObj.proxyUrl);
@@ -447,7 +607,113 @@ Select an anime and episode to inspect live API responses...
       }
     }
 
-    // 8. Dynamic AniSkip Skip Intro Event Listener
+    // 8. Dynamic Subtitle Track Handling
+    function populateSubtitleTracks(subs) {
+      const select = document.getElementById('subtitleSelect');
+      select.innerHTML = '<option value="off">Off (No Subtitles)</option>';
+
+      // Remove existing HTML5 tracks
+      while (video.firstChild) {
+        video.removeChild(video.firstChild);
+      }
+
+      if (!subs || !subs.length) {
+        document.getElementById('subTrackBadge').innerText = 'None';
+        return;
+      }
+
+      document.getElementById('subTrackBadge').innerText = `${subs.length} tracks`;
+
+      subs.forEach((s, idx) => {
+        const opt = document.createElement('option');
+        opt.value = `vtt_${idx}`;
+        opt.innerText = s.label || s.lang || `Track ${idx + 1}`;
+        select.appendChild(opt);
+
+        // Inject track element into video
+        const track = document.createElement('track');
+        track.kind = 'subtitles';
+        track.label = s.label || s.lang || `Track ${idx + 1}`;
+        track.srclang = (s.lang || 'en').slice(0, 2).toLowerCase();
+        track.src = s.proxyUrl || s.url;
+        if (idx === 0) {
+          track.default = true;
+        }
+        video.appendChild(track);
+      });
+
+      // Select default English track if available
+      const enIdx = subs.findIndex(s => (s.label || s.lang || '').toLowerCase().includes('en'));
+      if (enIdx !== -1) {
+        select.value = `vtt_${enIdx}`;
+        setTimeout(() => switchSubtitle(`vtt_${enIdx}`), 300);
+      }
+    }
+
+    function mergeHlsSubtitleTracks(hlsTracks) {
+      const select = document.getElementById('subtitleSelect');
+      hlsTracks.forEach((t, idx) => {
+        const opt = document.createElement('option');
+        opt.value = `hls_${idx}`;
+        opt.innerText = `(HLS) ${t.name || t.lang || `Subtitle ${idx + 1}`}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function switchSubtitle(val) {
+      const badge = document.getElementById('subTrackBadge');
+      if (val === 'off') {
+        badge.innerText = 'Off';
+        if (hlsInstance) hlsInstance.subtitleTrack = -1;
+        for (let i = 0; i < video.textTracks.length; i++) {
+          video.textTracks[i].mode = 'disabled';
+        }
+        return;
+      }
+
+      if (val.startsWith('hls_')) {
+        const idx = parseInt(val.replace('hls_', ''), 10);
+        if (hlsInstance) hlsInstance.subtitleTrack = idx;
+        badge.innerText = `HLS Track ${idx + 1}`;
+      } else if (val.startsWith('vtt_')) {
+        const idx = parseInt(val.replace('vtt_', ''), 10);
+        if (hlsInstance) hlsInstance.subtitleTrack = -1;
+        for (let i = 0; i < video.textTracks.length; i++) {
+          video.textTracks[i].mode = (i === idx) ? 'showing' : 'disabled';
+        }
+        badge.innerText = video.textTracks[idx]?.label || 'Active';
+      }
+    }
+
+    // 9. Audio Track Handling
+    function populateHlsAudioTracks(audioTracks) {
+      const select = document.getElementById('audioSelect');
+      select.innerHTML = '<option value="default">Default Track</option>';
+
+      if (!audioTracks || audioTracks.length <= 1) {
+        document.getElementById('audioTrackBadge').innerText = 'Stereo';
+        return;
+      }
+
+      document.getElementById('audioTrackBadge').innerText = `${audioTracks.length} tracks`;
+      audioTracks.forEach((t, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.innerText = `${t.name || t.lang || `Audio Track ${idx + 1}`}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function switchAudioTrack(val) {
+      if (val === 'default') {
+        if (hlsInstance) hlsInstance.audioTrack = -1;
+        return;
+      }
+      const idx = parseInt(val, 10);
+      if (hlsInstance) hlsInstance.audioTrack = idx;
+    }
+
+    // 10. Dynamic AniSkip Skip Intro Event Listener
     function initPlayerEvents() {
       video.addEventListener('timeupdate', () => {
         const cur = video.currentTime;
@@ -489,7 +755,7 @@ Select an anime and episode to inspect live API responses...
       skipContainer.classList.add('hidden');
     }
 
-    // 9. Inspector Tab Switching
+    // 11. Inspector Tab Switching
     function switchInspectorTab(tab) {
       activeInspectorTab = tab;
       ['tabStreams', 'tabSkip', 'tabDetails'].forEach(id => {

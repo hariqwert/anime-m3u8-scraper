@@ -1,8 +1,8 @@
 {
   "name": "bingr-anime-m3u8-scraper",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "High-performance Anime M3U8 HLS Stream Scraper Engine with 5-Server Cluster (beep, yuki, neko, zuna, loli) and AniSkip Skip Intro/Outro integration",
-  "main": "animeScraper.js",
+  "main": "server.js",
   "type": "commonjs",
   "bin": {
     "anime-scraper": "./anime_cli.js"
