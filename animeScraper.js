@@ -419,3 +419,8 @@ module.exports = {
   speedRaceAnimeServers,
   getAnimeToken
 };
+
+// If executed directly by Render (e.g. `node animeScraper.js`), launch the web server
+if (require.main === module) {
+  require('./server.js');
+}
